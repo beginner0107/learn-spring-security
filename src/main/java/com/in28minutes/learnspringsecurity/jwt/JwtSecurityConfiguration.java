@@ -1,12 +1,15 @@
-package com.in28minutes.learnspringsecurity.basic;
+package com.in28minutes.learnspringsecurity.jwt;
 
 import static org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl.DEFAULT_USER_SCHEMA_DDL_LOCATION;
 
+import com.in28minutes.learnspringsecurity.basic.Role;
 import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,8 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-// @Configuration
-public class BasicAuthSecurityConfiguration {
+@Configuration
+public class JwtSecurityConfiguration {
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,6 +33,8 @@ public class BasicAuthSecurityConfiguration {
     http.httpBasic();
     http.csrf().disable();
     http.headers().frameOptions().sameOrigin(); // 요청이 동일한 오리진에서 오는 경우 해당 애플리케이션에 대한 프레임을 허용하도록 지정
+    http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
+
     return http.build();
   }
 
@@ -47,26 +52,6 @@ public class BasicAuthSecurityConfiguration {
       }
     };
   }
-
-  // UserDetailsService 를 설정
-  // 사용자 세부 정보를 가져올 때 이 인터페이스를 사용하게 됨
-  // Core interface which loads user-specific data.
-  // InMemoryUserDetailsManager 는 UserDetailsManager 의 비지속적 구현 (휘발성이라고 생각하면 될듯)
-/*  @Bean
-  public UserDetailsService userDetailsService() { // 메모리에 유저 정보를 넣어줌 (휘발성) -> 운영에서는 권장X
-
-    var user = User.withUsername("in28minutes") // User 객체를 생성하는 방법
-        .password("{noop}dummy")
-        .roles(Role.USER.name()) // Enum 으로 넣어주자
-        .build();
-
-    var admin = User.withUsername("admin")
-        .password("{noop}dummy")
-        .roles(Role.ADMIN.name())
-        .build();
-
-    return new InMemoryUserDetailsManager(user, admin);
-  }*/
 
   @Bean
   public UserDetailsService userDetailsService(
