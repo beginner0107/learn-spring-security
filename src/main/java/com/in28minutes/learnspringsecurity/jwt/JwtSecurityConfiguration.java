@@ -27,7 +27,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -112,9 +114,9 @@ public class JwtSecurityConfiguration {
 
   // Create RSA Key object using Key Pair
   @Bean
-  public RSAKey rsaKey() {
-    return new RSAKey.Builder((RSAPublicKey) keyPair().getPublic()) // 공개키
-        .privateKey(keyPair().getPrivate()) // 개인키
+  public RSAKey rsaKey(KeyPair keyPair) {
+    return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic()) // 공개키
+        .privateKey(keyPair.getPrivate()) // 개인키
         .keyID(UUID.randomUUID().toString())
         .build();
   }
@@ -126,10 +128,15 @@ public class JwtSecurityConfiguration {
   }
 
   @Bean
-  public JwtDecoder jwtDecoder() throws JOSEException {
+  public JwtDecoder jwtDecoder(RSAKey rsaKey) throws JOSEException {
     return NimbusJwtDecoder
-        .withPublicKey(rsaKey().toRSAPublicKey())
+        .withPublicKey(rsaKey.toRSAPublicKey())
         .build();
+  }
+
+  @Bean
+  public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+    return new NimbusJwtEncoder(jwkSource);
   }
 }
 
